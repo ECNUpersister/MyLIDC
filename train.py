@@ -17,7 +17,7 @@ from metric.utils import AverageMeter
 from segmentation.view_output import view_output
 from model.unet.unet import UNet
 
-cur_path = 'G:/github/LIDC'
+cur_path = 'G:/MyLIDC'
 dataset = 'lidc_shape64'
 shape = 64
 epochs = 1
