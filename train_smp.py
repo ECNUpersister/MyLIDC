@@ -3,18 +3,19 @@ import time
 from collections import OrderedDict
 from glob import glob
 
+import segmentation_models_pytorch as smp
 import torch
 import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from tqdm import tqdm
 
+from segmentation.dataset import MyLidcDataset
 from metric.losses import DiceLoss
 from metric.metrics import iou_score, dice_coef
 from metric.result import *
 from metric.utils import AverageMeter
-from model.unet.unet import UNet
-from segmentation.dataset import MyLidcDataset
 from segmentation.view_output import view_output
+from model.unet.unet import UNet
 
 cur_path = 'G:/MyLIDC'
 dataset = 'lidc_shape64'
@@ -27,8 +28,16 @@ learning_rate = 1e-5
 momentum = 0.9
 weight_decay = 1e-4
 augmentations = True
-backbone = 'none'
-my_model = UNet(n_channels=1, n_classes=1,bilinear=False)
+backbone = 'resnet18'
+smp_model = smp.UnetPlusPlus(
+    encoder_name=backbone,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+    # encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+    decoder_attention_type='scse',
+    decoder_use_batchnorm=True,
+    # decoder_merge_policy='cat',
+    in_channels=1,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+    classes=1,  # model     channels (number of classes in your lidc_shape64)
+)
 
 
 def train(data_loader, model, criterion, isTrain, optimizer):
@@ -88,7 +97,7 @@ def main():
     file_name = config_save()
     criterion = DiceLoss().cuda()
     cudnn.benchmark = True
-    model = my_model.cuda()
+    model = smp_model.cuda()
 
     params = filter(lambda p: p.requires_grad, model.parameters())
 
