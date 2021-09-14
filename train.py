@@ -13,6 +13,7 @@ from metric.metrics import iou_score, dice_coef
 from metric.result import *
 from metric.utils import AverageMeter
 from model.unet.unet import UNet
+from model.unetplusplus.unetplusplus import UNetPlusPlus
 from segmentation.dataset import MyLidcDataset
 from segmentation.view_output import view_output
 
@@ -28,7 +29,7 @@ momentum = 0.9
 weight_decay = 1e-4
 augmentations = True
 backbone = 'none'
-my_model = UNet(n_channels=1, n_classes=1,bilinear=False)
+my_model = UNetPlusPlus(n_channels=1, n_classes=1)
 
 
 def train(data_loader, model, criterion, isTrain, optimizer):

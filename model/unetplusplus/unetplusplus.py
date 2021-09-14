@@ -24,7 +24,7 @@ class VGGBlock(nn.Module):
 
 
 class UNetPlusPlus(nn.Module):
-    def __init__(self, num_classes, input_channels=1, **kwargs):
+    def __init__(self, n_classes=1, n_channels=1, **kwargs):
         super().__init__()
 
         nb_filter = [32, 64, 128, 256, 512]
@@ -32,7 +32,7 @@ class UNetPlusPlus(nn.Module):
         self.pool = nn.MaxPool2d(2, 2)
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
-        self.conv0_0 = VGGBlock(input_channels, nb_filter[0], nb_filter[0])
+        self.conv0_0 = VGGBlock(n_channels, nb_filter[0], nb_filter[0])
         self.conv1_0 = VGGBlock(nb_filter[0], nb_filter[1], nb_filter[1])
         self.conv2_0 = VGGBlock(nb_filter[1], nb_filter[2], nb_filter[2])
         self.conv3_0 = VGGBlock(nb_filter[2], nb_filter[3], nb_filter[3])
@@ -52,7 +52,7 @@ class UNetPlusPlus(nn.Module):
 
         self.conv0_4 = VGGBlock(nb_filter[0] * 4 + nb_filter[1], nb_filter[0], nb_filter[0])
 
-        self.final = nn.Conv2d(nb_filter[0], num_classes, kernel_size=1)
+        self.final = nn.Conv2d(nb_filter[0], n_classes, kernel_size=1)
 
     def forward(self, input):
         x0_0 = self.conv0_0(input)
