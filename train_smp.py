@@ -15,7 +15,6 @@ from metric.metrics import iou_score, dice_coef
 from metric.result import *
 from metric.utils import AverageMeter
 from segmentation.view_output import view_output
-from model.unet.unet import UNet
 
 cur_path = 'G:/MyLIDC'
 dataset = 'lidc_shape64'
@@ -29,6 +28,7 @@ momentum = 0.9
 weight_decay = 1e-4
 augmentations = True
 backbone = 'resnet18'
+smp.Unet
 smp_model = smp.UnetPlusPlus(
     encoder_name=backbone,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
     # encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization

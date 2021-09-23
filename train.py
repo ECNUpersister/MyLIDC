@@ -30,7 +30,7 @@ momentum = 0.9
 weight_decay = 1e-4
 augmentations = True
 backbone = 'none'
-my_model = FCN32s()
+my_model = UNet(n_channels=1,n_classes=1)
 
 
 def train(data_loader, model, criterion, isTrain, optimizer):
