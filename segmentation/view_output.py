@@ -6,11 +6,14 @@ import segmentation_models_pytorch as smp
 import torch
 from segmentation.transform import transform
 import imageio
+from model.unet.unet import UNet
 
 
 def view_output(model, dir, dataset, shape, albumentations, cur_path):
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     index = 836
     model.load_state_dict(torch.load(os.path.join('{}/model_outputs/{}'.format(cur_path, dir), 'model.pth')))
+    model = model.to(device)
     train_img = np.load('{}/dataset/{}/train/Image/LIDC-IDRI-0001/0001_NI000_slice000.npy'.format(cur_path, dataset))
     train_mask = np.load('{}/dataset/{}/train/Mask/LIDC-IDRI-0001/0001_MA000_slice000.npy'.format(cur_path, dataset))
     test_img = np.load(
@@ -59,18 +62,19 @@ def view_output(model, dir, dataset, shape, albumentations, cur_path):
 
 
 if __name__ == '__main__':
-    dir = '2021-09-09_18_21_37'
-    dataset = 'lidc_shape64'
-    shape = 64
+    dir = '2021-12-24_14_10_57'
+    dataset = 'lidc_shape512'
+    shape = 512
     albumentations = True
-    backbone = 'inceptionresnetv2'
-    model = smp.UnetPlusPlus(
-        encoder_name=backbone,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
-        # encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
-        # decoder_attention_type='scse',
-        decoder_use_batchnorm=True,
-        # decoder_merge_policy='cat',
-        in_channels=1,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
-        classes=1,  # model     channels (number of classes in your lidc_shape64)
-    )
-    view_output(model, dir, dataset, shape, albumentations)
+    # backbone = 'inceptionresnetv2'
+    # model = smp.UnetPlusPlus(
+    #     encoder_name=backbone,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+    #     # encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+    #     # decoder_attention_type='scse',
+    #     decoder_use_batchnorm=True,
+    #     # decoder_merge_policy='cat',
+    #     in_channels=1,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+    #     classes=1,  # model     channels (number of classes in your lidc_shape64)
+    # )
+    model = UNet(n_channels=1, n_classes=1)
+    view_output(model, dir, dataset, shape, albumentations,"G:\MyLIDC")

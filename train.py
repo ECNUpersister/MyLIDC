@@ -3,9 +3,7 @@ import time
 from collections import OrderedDict
 from glob import glob
 
-import torch
 import torch.backends.cudnn as cudnn
-import torch.optim as optim
 from tqdm import tqdm
 
 from metric.losses import DiceLoss
@@ -19,11 +17,11 @@ from segmentation.dataset import MyLidcDataset
 from segmentation.view_output import view_output
 
 cur_path = 'G:/MyLIDC'
-dataset = 'lidc_shape64'
-shape = 64
-epochs = 1000
-batch_size = 64
-early_stopping = 30
+dataset = 'lidc_shape512'
+shape = 512
+epochs = 500
+batch_size = 3
+early_stopping = 300
 num_workers = 0
 learning_rate = 1e-5
 momentum = 0.9
@@ -87,10 +85,12 @@ def config_save():
 
 
 def main():
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     file_name = config_save()
     criterion = DiceLoss().cuda()
     cudnn.benchmark = True
-    model = my_model.cuda()
+    # model = my_model.cuda()
+    model = my_model.to(device)
 
     params = filter(lambda p: p.requires_grad, model.parameters())
 

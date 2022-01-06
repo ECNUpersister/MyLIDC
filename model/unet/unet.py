@@ -9,8 +9,7 @@ class UNet(nn.Module):
         self.n_classes = n_classes
         self.bilinear = bilinear
 
-        self.inc = DoubleConv(n_channels,
-                              64)  # 输入x.shape=[64,1,64,64] 这一步做了两次卷积 conv1=（in_channel=1，mid_channel=64） bn relu conv2=(in_channel=64,out_channel=64) bn relu
+        self.inc = DoubleConv(n_channels,64)  # 输入x.shape=[64,1,64,64] 这一步做了两次卷积 conv1=（in_channel=1，mid_channel=64） bn relu conv2=(in_channel=64,out_channel=64) bn relu
         self.down1 = Down(64, 128)
         self.down2 = Down(128, 256)
         self.down3 = Down(256, 512)
@@ -19,8 +18,11 @@ class UNet(nn.Module):
         self.up1 = Up(1024, 512 // factor, bilinear)
         self.attention1 = SCSEModule(256, 16)
         self.up2 = Up(512, 256 // factor, bilinear)
+        self.attention2 = SCSEModule(128, 16)
         self.up3 = Up(256, 128 // factor, bilinear)
+        self.attention3 = SCSEModule(64, 16)
         self.up4 = Up(128, 64, bilinear)
+        self.attention4 = SCSEModule(64, 16)
         self.outc = OutConv(64, n_classes)
 
     def forward(self, x):
@@ -33,7 +35,10 @@ class UNet(nn.Module):
         x = self.up1(x5, x4)  # x.shape=[64,256,8,8]
         x = self.attention1(x)
         x = self.up2(x, x3)  # x.shape=[64,128,16,16]
+        x = self.attention2(x)
         x = self.up3(x, x2)  # x.shape=[64,64,32,32]
+        x = self.attention3(x)
         x = self.up4(x, x1)  # x.shape=[64,64,64,64]
+        x = self.attention4(x)
         logits = self.outc(x)  # logits.shape=[64,1,64,64]
         return logits

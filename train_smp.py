@@ -17,23 +17,22 @@ from metric.utils import AverageMeter
 from segmentation.view_output import view_output
 
 cur_path = 'G:/MyLIDC'
-dataset = 'lidc_shape64'
-shape = 64
+dataset = 'lidc_shape512'
+shape = 512
 epochs = 1000
-batch_size = 64
-early_stopping = 30
+batch_size = 1
+early_stopping = 100
 num_workers = 0
 learning_rate = 1e-5
 momentum = 0.9
 weight_decay = 1e-4
 augmentations = True
-backbone = 'resnet18'
-smp.Unet
+backbone = 'timm-res2net50_26w_8s'
 smp_model = smp.UnetPlusPlus(
     encoder_name=backbone,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
-    # encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+    encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
     decoder_attention_type='scse',
-    decoder_use_batchnorm=True,
+    decoder_use_batchnorm=False,
     # decoder_merge_policy='cat',
     in_channels=1,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
     classes=1,  # model     channels (number of classes in your lidc_shape64)

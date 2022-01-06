@@ -10,8 +10,8 @@ class MyLidcDataset(Dataset):
         IMAGES_PATHS: list of images paths ['./Images/0001_01_images.npy','./Images/0001_02_images.npy']
         MASKS_PATHS: list of masks paths ['./Masks/0001_01_masks.npy','./Masks/0001_02_masks.npy']
         """
-        self.image_path = image_path
-        self.mask_path = mask_path
+        self.image_path = list(sorted(image_path))
+        self.mask_path = list(sorted(mask_path))
         self.shape = shape
         self.albumentation = Albumentation
 
