@@ -8,7 +8,7 @@ from PIL import Image
 from model.unet.unet import UNet
 from segmentation.transform import transform
 
-cur_path = 'G:/MyLIDC'
+cur_path = 'G:/MyLIDC/data'
 dataset = 'lidc_shape512'
 augmentations = True
 shape = 512
