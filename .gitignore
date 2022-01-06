@@ -1,2 +1,4 @@
 dataset
 model_outputs
+/.idea/
+*/__pycache__
