@@ -16,8 +16,8 @@ model = UNet(n_channels=1, n_classes=1)
 model.load_state_dict(torch.load('G:/MyLIDC/app/pth/unet/model.pth'))
 device = torch.device('cuda')
 model = model.to(device)
-dir_pre_npy = 'G:/MyLIDC/predict_npy/test/'
-dir_pre_png = 'G:/MyLIDC/predict_png/test/'
+dir_pre_npy = '/data/predict_npy/test/'
+dir_pre_png = '/data/predict_png/test/'
 
 """
 这个工程使用来跑第一阶段粗定位产生的预测结果，用于制作第二阶段假阳性筛除的数据集

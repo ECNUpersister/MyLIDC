@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 
 
-pre_path = 'G:/MyLIDC/dataset/lidc_shape512/train/Image'
+pre_path = '/data/dataset/lidc_shape512/train/Image'
 for dir in os.listdir(pre_path):
     print('当前已经处理到'+str(dir))
     dest_path = os.path.join('G:/MyLIDC/output/train/Image', dir)
