@@ -20,7 +20,7 @@ cur_path = 'G:/MyLIDC'
 dataset = 'lidc_shape512'
 shape = 512
 epochs = 500
-batch_size = 3
+batch_size = 2
 early_stopping = 300
 num_workers = 0
 learning_rate = 1e-5
@@ -28,7 +28,8 @@ momentum = 0.9
 weight_decay = 1e-4
 augmentations = True
 backbone = 'none'
-my_model = UNet(n_channels=1,n_classes=1)
+my_model = UNet(n_channels=1, n_classes=1)
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 
 def train(data_loader, model, criterion, isTrain, optimizer):
@@ -37,8 +38,8 @@ def train(data_loader, model, criterion, isTrain, optimizer):
     bar = tqdm(total=len(data_loader))
     for input, target in data_loader:
         batch_size = input.size(0)
-        input = input.cuda()
-        target = target.cuda()
+        input = input.to(device)
+        target = target.to(device)
         output = model(input)
 
         loss = criterion(output, target)
@@ -85,11 +86,9 @@ def config_save():
 
 
 def main():
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     file_name = config_save()
-    criterion = DiceLoss().cuda()
-    cudnn.benchmark = True
-    # model = my_model.cuda()
+    criterion = DiceLoss().to(device)
+    # cudnn.benchmark = True
     model = my_model.to(device)
 
     params = filter(lambda p: p.requires_grad, model.parameters())
