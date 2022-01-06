@@ -9,7 +9,7 @@ app = Flask(__name__, template_folder="web")
 
 
 @app.route('/detect/imageDetect', methods=['post'])
-def upload():
+def predict():
     # step 1. receive image
     file = request.form.get('imageBase64Code')
     image = Image.open(BytesIO(base64.b64decode(file)))
