@@ -1,12 +1,8 @@
 import base64
-import io
 from io import BytesIO
-
-import requests as req
 from PIL import Image
 from flask import Flask, request
-
-import service as service
+from service import detect
 
 # flask web service
 app = Flask(__name__, template_folder="web")
@@ -16,20 +12,14 @@ app = Flask(__name__, template_folder="web")
 def upload():
     # step 1. receive image
     file = request.form.get('imageBase64Code')
-    image_link = request.form.get("imageLink")
-
-    if image_link:
-        response = req.get(image_link)
-        image = Image.open(BytesIO(response.content))
-    else:
-        image = Image.open(BytesIO(base64.b64decode(file)))
+    image = Image.open(BytesIO(base64.b64decode(file)))
 
     # step 2. detect image
-    image_array = service.detect(image)
+    image_array = detect(image)
 
     # step 3. convert image_array to byte_array
     img = Image.fromarray(image_array)
-    img_byte_array = io.BytesIO()
+    img_byte_array = BytesIO()
     img.save(img_byte_array, format='JPEG')
 
     # step 4. return image_info to page
