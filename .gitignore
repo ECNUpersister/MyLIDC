@@ -2,3 +2,5 @@ dataset
 model_outputs
 /.idea/
 */__pycache__
+predict_npy
+predict_png
