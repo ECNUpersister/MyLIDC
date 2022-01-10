@@ -19,6 +19,7 @@ def main():
     mask_path_list = list(sorted(mask_path_list))
     img_path_list = list(sorted(img_path_list))
     length = len(predict_path_list)
+    # length =50
     for index in range(length):
         mask_index_path = mask_path_list[index]
         predict_index_path = predict_path_list[index]
@@ -50,10 +51,13 @@ def main():
         contours, hierarchy = cv2.findContours(predict_uint8, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         if len(contours) != 0:
             for contour in contours:
-                if cv2.contourArea(contour) > 10:
+                Area = cv2.contourArea(contour)
+                if Area > 10 and Area != 261121:  # 如果是这个值说明这张图里没有假阳性。是全黑的
                     boundingrect = cv2.boundingRect(contour)
-                    centerx = boundingrect[0] + math.floor(boundingrect[2] / 2)
-                    centery = boundingrect[1] + math.floor(boundingrect[3] / 2)
+                    # 这里x y很容易搞错，其实我理解的x对应的是竖着的，y对应的是横着的，所以我理解的是 img【x，y】这种格式，
+                    # 但实际上x对应的是横轴，y对应的是纵轴，是img【y，x】这种格式
+                    centerx = boundingrect[1] + math.floor(boundingrect[3] / 2)
+                    centery = boundingrect[0] + math.floor(boundingrect[2] / 2)
                     position = make_slice64(centerx, centery)
                     false_positive_img_shape64 = img[position[0]:position[1] + 1, position[2]:position[3] + 1]
                     false_positive_mask_shape64 = predict_uint8[position[0]:position[1] + 1,
@@ -90,3 +94,5 @@ def make_slice64(x, y):
 
 if __name__ == '__main__':
     main()
+    # print(make_slice64(159,368))
+    # (127, 190, 336, 399)

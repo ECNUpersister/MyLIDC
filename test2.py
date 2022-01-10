@@ -1,4 +1,8 @@
+import cv2
 import numpy as np
 
-a= "0001_NI000_slice000.npy"
-print(a+str(6))
+img=np.zeros((512,512),dtype='uint8')
+img[:,:]=255
+contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+for contour in contours:
+    print(cv2.contourArea(contour)==261121)
