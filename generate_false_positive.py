@@ -4,21 +4,7 @@ from glob import glob
 
 import cv2
 import numpy as np
-import torch
 from PIL import Image
-
-from model.unet.unet import UNet
-
-cur_path = 'G:/MyLIDC/data'
-dataset = 'lidc_shape512'
-augmentations = True
-shape = 512
-model = UNet(n_channels=1, n_classes=1)
-model.load_state_dict(torch.load('G:/MyLIDC/app/pth/unet/model.pth'))
-device = torch.device('cuda')
-model = model.to(device)
-dir_pre_npy = '/data/predict_npy/train/'
-dir_pre_png = '/data/predict_png/train/'
 
 """
 这个工程使用来跑第一阶段粗定位产生的预测结果，用于制作第二阶段假阳性筛除的数据集
