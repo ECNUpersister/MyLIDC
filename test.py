@@ -1,26 +1,98 @@
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
+import math
+import os
+from glob import glob
 
-img=np.load('G:\MyLIDC\data\\false_positive\\false_positive_npy\\train\\0002_NI000_slice002_159_368.npy')
-img2= np.load('G:\MyLIDC\data\predict_npy\\train\LIDC-IDRI-0002\\0002_PR000_slice002.npy')
-imgk=np.load('G:\MyLIDC\data\dataset\lidc_shape512\\train\Mask\LIDC-IDRI-0002\\0002_MA000_slice002.npy')
-img3=np.zeros((512,512),dtype='uint8')
-img3[img2]=255
-# print(img3[368,159])
-# print(np.where(img2))
-contours, _ = cv2.findContours(img3, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-for contour in contours:
-    Area = cv2.contourArea(contour)
-    if Area > 10 and Area != 261121:  # 如果是这个值说明这张图里没有假阳性。是全黑的
-        boundingrect = cv2.boundingRect(contour)
-        print(boundingrect)
-# img4= img3[127:191,336:400]
-# plt.imshow(imgk)
-# plt.show()
-# print(img4[32,32])
-# (array([171, 172, 364, 364, 365, 365, 365, 365, 365, 366, 366, 366, 366,
-#        366, 367, 367, 367, 367, 367, 368, 368, 368, 368, 369, 369, 369,
-#        369, 370, 370, 370, 370, 371, 371, 371, 371, 372, 372], dtype=int64), array([231, 231, 158, 159, 157, 158, 159, 160, 161, 157, 158, 159, 160,
-#        161, 157, 158, 159, 160, 161, 158, 159, 160, 161, 158, 159, 160,
-#        161, 157, 158, 159, 160, 157, 158, 159, 160, 158, 159], dtype=int64))
+import cv2
+import numpy as np
+from PIL import Image
+
+"""
+这个工程使用来跑第一阶段粗定位产生的预测结果，用于制作第二阶段假阳性筛除的数据集
+"""
+
+
+def main():
+    predict_path_list = glob(os.path.join('data/predict_npy/test/*', "*.npy"))  # 载入网络一预测结果列表
+    mask_path_list = glob(os.path.join('data/dataset/lidc_shape512/test/Mask/*', "*.npy"))  # 载入GT Mask列表
+    img_path_list = glob(os.path.join('data/dataset/lidc_shape512/test/Image/*', "*.npy"))
+    predict_path_list = list(sorted(predict_path_list))
+    mask_path_list = list(sorted(mask_path_list))
+    img_path_list = list(sorted(img_path_list))
+    length = len(predict_path_list)
+    # length =50
+    for index in range(length):
+        mask_index_path = mask_path_list[index]
+        predict_index_path = predict_path_list[index]
+        img_index_path = img_path_list[index]
+        img_name = img_index_path[-23:-4]  # 差不多长这样 0001_NI000_slice000
+        mask = np.load(mask_index_path)
+        pos = np.where(mask)
+        xmin = np.min(pos[0])
+        xmax = np.max(pos[0])
+        ymin = np.min(pos[1])
+        ymax = np.max(pos[1])
+        x = (xmin + xmax) / 2
+        y = (ymin + ymax) / 2
+        xmin = 0 if x - 32 < 0 else math.floor(x - 32)
+        xmax = 511 if x + 32 > 511 else math.ceil(x + 32)
+        ymin = 0 if y - 32 < 0 else math.floor(y - 32)
+        ymax = 511 if y + 32 > 511 else math.ceil(y + 32)
+        predic = np.load(predict_index_path)
+        img = np.load(img_index_path)
+        # 以下是图像Hu值修正固定流程
+        img = (img + 1000) / 1400 * 255
+        img[img > 255] = 255
+        img[img < 0] = 0
+        img = img.astype(np.uint8)
+
+        predic[xmin:xmax + 1, ymin:ymax + 1] = False  # 根据GT Mask制作遮罩，将predict中的真预测遮住，那剩下的就全都是假预测了
+        predict_uint8 = np.zeros((512, 512), dtype='uint8')
+        predict_uint8[np.where(predic)] = 255
+        contours, hierarchy = cv2.findContours(predict_uint8, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) != 0:
+            for contour in contours:
+                Area = cv2.contourArea(contour)
+                if Area > 10 and Area != 261121:  # 如果是这个值说明这张图里没有假阳性。是全黑的
+                    boundingrect = cv2.boundingRect(contour)
+                    # 这里x y很容易搞错，其实我理解的x对应的是竖着的，y对应的是横着的，所以我理解的是 img【x，y】这种格式，
+                    # 但实际上x对应的是横轴，y对应的是纵轴，是img【y，x】这种格式
+                    centerx = boundingrect[1] + math.floor(boundingrect[3] / 2)
+                    centery = boundingrect[0] + math.floor(boundingrect[2] / 2)
+                    position = make_slice64(centerx, centery)
+                    false_positive_img_shape64 = img[position[0]:position[1] + 1, position[2]:position[3] + 1]
+                    false_positive_mask_shape64 = predict_uint8[position[0]:position[1] + 1,
+                                                  position[2]:position[3] + 1]
+                    false_positive_img_shape64_name = img_name + '_' + str(centerx) + '_' + str(centery)
+                    false_positive_img_shape64_name_npy = false_positive_img_shape64_name + '.npy'
+                    false_positive_img_shape64_name_png = false_positive_img_shape64_name + '.png'
+                    np.save('data/false_positive/false_positive_npy/test/' + false_positive_img_shape64_name_npy,
+                            false_positive_img_shape64)
+                    false_positive_img_shape64 = Image.fromarray(false_positive_img_shape64)
+                    false_positive_img_shape64.save(
+                        'data/false_positive/false_positive_png/test/' + false_positive_img_shape64_name_png)
+                    false_positive_mask_shape64 = Image.fromarray(false_positive_mask_shape64)
+                    false_positive_mask_shape64.save(
+                        'data/false_positive/false_positive_mask_png/test/' + false_positive_img_shape64_name_png)
+        print("第{}张图像已执行".format(index))
+
+
+def make_slice64(x, y):
+    xmin = 0 if x - 32 < 0 else x - 32
+    ymin = 0 if y - 32 < 0 else y - 32
+    if x + 32 > 511:
+        xmin = 448
+        xmax = 511
+    else:
+        xmax = xmin + 63
+    if y + 32 > 511:
+        ymin = 448
+        ymax = 511
+    else:
+        ymax = ymin + 63
+    return (xmin, xmax, ymin, ymax)
+
+
+if __name__ == '__main__':
+    main()
+    # print(make_slice64(159,368))
+    # (127, 190, 336, 399)

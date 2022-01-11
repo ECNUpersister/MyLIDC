@@ -9,8 +9,8 @@ from metric.losses import DiceLoss
 from metric.metrics import iou_score, dice_coef
 from metric.result import *
 from metric.utils import AverageMeter
-from model.fcn.fcn import *
-from model.unet.unet import UNet
+from model.segmentation.fcn.fcn import *
+from model.segmentation.unet.unet import UNet
 from segmentation.dataset import MyLidcDataset
 from segmentation.view_output import view_output
 

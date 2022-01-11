@@ -1,5 +1,5 @@
-from model.unet.unet_components import *
-from model.utils.SCSE import SCSEModule
+from model.segmentation.unet.unet_components import *
+from model.segmentation.utils.SCSE import SCSEModule
 
 
 class UNet(nn.Module):

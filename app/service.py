@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from model.unet.unet import UNet
+from model.segmentation.unet.unet import UNet
 from segmentation.transform import transform
 
 

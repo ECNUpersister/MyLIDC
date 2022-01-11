@@ -2,11 +2,10 @@ import os.path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import segmentation_models_pytorch as smp
 import torch
-from segmentation.transform import transform
+from transform import transform
 import imageio
-from model.unet.unet import UNet
+from model.segmentation.unet.unet import UNet
 
 
 def view_output(model, dir, dataset, shape, albumentations, cur_path):

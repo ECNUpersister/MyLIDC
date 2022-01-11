@@ -20,7 +20,7 @@ def is_dir_path(string):
 def segment_lung(img):
     # function sourced from https://www.kaggle.com/c/data-science-bowl-2017#tutorial
     """
-    This segments the Lung Image(Don't get confused with lung nodule segmentation)
+    This segments the Lung Image(Don't get confused with lung nodule lidc_segmentation)
     """
     mean = np.mean(img)
     std = np.std(img)
