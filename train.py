@@ -11,8 +11,8 @@ from metric.result import *
 from metric.utils import AverageMeter
 from model.segmentation.fcn.fcn import *
 from model.segmentation.unet.unet import UNet
-from segmentation.dataset import MyLidcDataset
-from segmentation.view_output import view_output
+from lidc_segmentation.dataset import MyLidcDataset
+from lidc_segmentation.view_output import view_output
 
 cur_path = 'G:/MyLIDC'
 dataset = 'lidc_shape512'

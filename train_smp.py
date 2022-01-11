@@ -9,12 +9,12 @@ import torch.backends.cudnn as cudnn
 import torch.optim as optim
 from tqdm import tqdm
 
-from segmentation.dataset import MyLidcDataset
+from lidc_segmentation.dataset import MyLidcDataset
 from metric.losses import DiceLoss
 from metric.metrics import iou_score, dice_coef
 from metric.result import *
 from metric.utils import AverageMeter
-from segmentation.view_output import view_output
+from lidc_segmentation.view_output import view_output
 
 cur_path = 'G:/MyLIDC'
 dataset = 'lidc_shape512'
