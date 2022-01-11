@@ -5,27 +5,22 @@
 author baiyu
 """
 
-import os
-import sys
 import argparse
+import os
 import time
-from datetime import datetime
 from glob import glob
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision
-import torchvision.transforms as transforms
-
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from lidc_classification.conf import settings
 from lidc_classification.dataset import LidcClassificationDataset
-from lidc_classification.utils import get_network, get_training_dataloader, get_test_dataloader, WarmUpLR, \
+from lidc_classification.utils import get_network, WarmUpLR, \
     most_recent_folder, most_recent_weights, last_epoch, best_acc_weights
+
 
 def train(epoch):
 

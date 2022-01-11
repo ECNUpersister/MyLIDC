@@ -21,7 +21,7 @@ class LidcClassificationDataset(Dataset):
             image = (image + 1000) / 1400 * 255
             image[image > 255] = 255
             image[image < 0] = 0
-            label = 1.0
+            label = 1  # 只能写1 不能写 1.0 因为 1.0 是double类型，要求long类型
         image = image.astype(np.uint8)
         transformations = transforms.Compose([transforms.ToTensor()])
         image = transformations(image)
