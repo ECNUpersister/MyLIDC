@@ -1,13 +1,10 @@
 import os
-import os
 
 import numpy as np
 from medpy.filter.smoothing import anisotropic_diffusion
 from scipy.ndimage import median_filter
 from skimage import measure, morphology
 from sklearn.cluster import KMeans
-
-
 
 
 def is_dir_path(string):
@@ -22,6 +19,7 @@ def segment_lung(img):
     """
     This segments the Lung Image(Don't get confused with lung nodule lidc_segmentation)
     """
+    imgk = img
     mean = np.mean(img)
     std = np.std(img)
     img = img - mean
@@ -37,6 +35,7 @@ def segment_lung(img):
 
     # apply median filter
     img = median_filter(img, size=3)
+    imgz = img
     # apply anistropic non-linear diffusion filter- This removes noise without blurring the nodule boundary
     img = anisotropic_diffusion(img)
 
@@ -63,21 +62,29 @@ def segment_lung(img):
     #
     for N in good_labels:
         mask = mask + np.where(labels == N, 1, 0)
-    mask = morphology.dilation(mask, np.ones([10, 10]))  # one last dilation
+    mask = morphology.dilation(mask, np.ones([5, 5]))  # one last dilation
+    # mask = morphology.erosion(mask, np.ones([20, 20]))
     # mask consists of 1 and 0. Thus by mutliplying with the orginial image, sections with 1 will remain
-    return mask * img
+    # return mask * img
+
+    return mask
 
 
 def count_params(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
+
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
-    img=np.load('E:\github\LIDC\dataset2\\test\Image\LIDC-IDRI-0800\\0800_NI000_slice000.npy')
+
+    img = plt.imread('/Users/dongli/Desktop/0001_NI000_slice003.png')[:, :, 0]
+    print(img.shape)
     fig, ax = plt.subplots(1, 2)
     ax[0].imshow(img, cmap=plt.cm.gray)
     ax[0].axis('off')
-    ax[1].imshow(segment_lung(img), cmap=plt.cm.gray)
+    ss = segment_lung(img)
+    plt.imsave("/Users/dongli/Desktop/1.png", ss, cmap=plt.cm.gray)
+    ax[1].imshow(ss, cmap=plt.cm.gray)
     ax[1].axis('off')
     plt.xticks([])  # 去掉横坐标值
     plt.yticks([])  # 去掉纵坐标值

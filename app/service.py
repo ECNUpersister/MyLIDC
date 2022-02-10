@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from model.segmentation.unet.unet import UNet
-from segmentation.transform import transform
+from lidc_segmentation.transform import transform
 
 
 def detect(img):
