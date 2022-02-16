@@ -1,7 +1,7 @@
 import numpy as np
 from torch.utils.data.dataset import Dataset
 
-from transform import transform
+from lidc_segmentation.transform import transform
 
 
 class MyLidcDataset(Dataset):

@@ -67,7 +67,7 @@ def segment_lung(img):
     # mask consists of 1 and 0. Thus by mutliplying with the orginial image, sections with 1 will remain
     # return mask * img
 
-    return mask
+    return imgz,mask,mask*imgk
 
 
 def count_params(model):
@@ -77,15 +77,21 @@ def count_params(model):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
-    img = plt.imread('/Users/dongli/Desktop/0001_NI000_slice003.png')[:, :, 0]
+    img = plt.imread('C:/Users/15802/Desktop/0133_NI001_slice003.png')[:, :, 0]
     print(img.shape)
-    fig, ax = plt.subplots(1, 2)
+    fig, ax = plt.subplots(1, 4)
     ax[0].imshow(img, cmap=plt.cm.gray)
     ax[0].axis('off')
-    ss = segment_lung(img)
-    plt.imsave("/Users/dongli/Desktop/1.png", ss, cmap=plt.cm.gray)
-    ax[1].imshow(ss, cmap=plt.cm.gray)
+    a,b,c = segment_lung(img)
+    plt.imsave("C:/Users/15802/Desktop/1.png", a, cmap=plt.cm.gray)
+    plt.imsave("C:/Users/15802/Desktop/2.png", b, cmap=plt.cm.gray)
+    plt.imsave("C:/Users/15802/Desktop/3.png", c, cmap=plt.cm.gray)
+    ax[1].imshow(a, cmap=plt.cm.gray)
     ax[1].axis('off')
+    ax[2].imshow(b, cmap=plt.cm.gray)
+    ax[2].axis('off')
+    ax[3].imshow(c, cmap=plt.cm.gray)
+    ax[3].axis('off')
     plt.xticks([])  # 去掉横坐标值
     plt.yticks([])  # 去掉纵坐标值
     plt.show()

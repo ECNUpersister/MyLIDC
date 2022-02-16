@@ -3,7 +3,7 @@ import os.path
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from transform import transform
+from lidc_segmentation.transform import transform
 import imageio
 from model.segmentation.unet.unet import UNet
 

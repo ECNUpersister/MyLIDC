@@ -14,9 +14,9 @@ from model.segmentation.unet.unet import UNet
 from lidc_segmentation.dataset import MyLidcDataset
 from lidc_segmentation.view_output import view_output
 
-cur_path = 'G:/MyLIDC'
-dataset = 'lidc_shape512'
-shape = 512
+cur_path = 'data'
+dataset = 'lidc_shape64'
+shape = 64
 epochs = 500
 batch_size = 2
 early_stopping = 300
