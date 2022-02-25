@@ -18,5 +18,5 @@ def detect(img):
     img = img.unsqueeze(0).to(device)
     detect_img = model(img)
     detect_img = torch.sigmoid(detect_img).data.cpu().numpy()[0][0]
-    detect_img = detect_img > 0.5
+    detect_img = detect_img > 0.2
     return detect_img

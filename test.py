@@ -1,4 +1,10 @@
-import torch
+a1=0.33206107
+a2=0.33310201
+a3=0.33483692
 
-a=torch.FloatTensor([1])
-print(a)
+p1=0.5961
+p2=0.6808
+p3=0.4581
+
+s=a1*p1+a2*p2+a3*p3
+print(s)
