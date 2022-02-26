@@ -16,11 +16,11 @@ class MyDataset(torch.utils.data.Dataset):
             img = np.load(self.image_path_list[idx])
             img = Image.fromarray(img)
             mask = np.load(self.mask_path_list[idx])
-        else:
-            img=Image.open(self.image_path_list[idx])
+        else:  # 如果是png或者jpg文件
+            img = Image.open(self.image_path_list[idx])
             mask = Image.open(self.mask_path_list[idx])
             mask = np.array(mask)
-        img =img.convert("RGB")
+        img = img.convert("RGB")
         # instances are encoded as different colors
         obj_ids = np.unique(mask)
         # first id is the background, so remove it
@@ -31,28 +31,24 @@ class MyDataset(torch.utils.data.Dataset):
         masks = mask == obj_ids[:, None, None]
 
         # get bounding box coordinates for each mask
-        num_objs = len(obj_ids)
         boxes = []
-        for i in range(num_objs):
-            pos = np.where(masks[i])
-            xmin = np.min(pos[1])
-            xmax = np.max(pos[1])
-            ymin = np.min(pos[0])
-            ymax = np.max(pos[0])
-            boxes.append([xmin, ymin, xmax, ymax])
-            if xmin==xmax or ymin == ymax:
-                print()
+        pos = np.where(mask)
+        xmin = np.min(pos[1])
+        xmax = np.max(pos[1])
+        ymin = np.min(pos[0])
+        ymax = np.max(pos[0])
+        boxes.append([xmin, ymin, xmax, ymax])
 
         # convert everything into a torch.Tensor
         boxes = torch.as_tensor(boxes, dtype=torch.float32)
         # there is only one class
-        labels = torch.ones((num_objs,), dtype=torch.int64)
+        labels = torch.ones((1,), dtype=torch.int64)
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
         image_id = torch.tensor([idx])
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         # suppose all instances are not crowd
-        iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
+        iscrowd = torch.zeros((1,), dtype=torch.int64)
 
         target = {}
         target["boxes"] = boxes

@@ -12,7 +12,7 @@ from engine import train_one_epoch, evaluate
 from practice.dataset import MyDataset
 
 
-def get_model_instance_segmentation(num_classes):
+def get_maskrcnn(num_classes):
     # load an instance segmentation model pre-trained on COCO
     model = torchvision.models.detection.maskrcnn_resnet50_fpn(pretrained=True)
 
@@ -31,13 +31,12 @@ def get_model_instance_segmentation(num_classes):
 
     return model
 
+
 def get_transform(train):
-    transforms = []
-    transforms.append(T.ToTensor())
+    transforms = [T.ToTensor()]
     if train:
         transforms.append(T.RandomHorizontalFlip(0.5))
     return T.Compose(transforms)
-
 
 
 def main():
@@ -47,7 +46,7 @@ def main():
     # our dataset has two classes only - background and person
     num_classes = 2
     # use our dataset and defined transformations
-    cur_path='G:/MyLIDC/data'
+    cur_path = 'G:/MyLIDC/data'
     dataset_name = 'lidc_shape64'
     train_image_path_list = glob(os.path.join('{}/dataset/{}/train/Image/*'.format(cur_path, dataset_name), "*.npy"))
     train_mask_path_list = glob(os.path.join('{}/dataset/{}/train/Mask/*'.format(cur_path, dataset_name), "*.npy"))
@@ -55,13 +54,13 @@ def main():
     val_image_path_list = glob(os.path.join('{}/dataset/{}/test/Image/*'.format(cur_path, dataset_name), "*.npy"))
     val_mask_path_list = glob(os.path.join('{}/dataset/{}/test/Mask/*'.format(cur_path, dataset_name), "*.npy"))
 
-    dataset = MyDataset(train_image_path_list, train_mask_path_list,get_transform(train=True))
-    dataset_test = MyDataset(val_image_path_list,val_mask_path_list, get_transform(train=False))
+    dataset = MyDataset(train_image_path_list, train_mask_path_list, get_transform(train=True))
+    dataset_test = MyDataset(val_image_path_list, val_mask_path_list, get_transform(train=False))
 
     # split the dataset in train and test set
     indices1 = torch.randperm(len(dataset)).tolist()
     indices2 = torch.randperm(len(dataset_test)).tolist()
-    dataset = torch.utils.data.Subset(dataset, indices1[:500])
+    dataset = torch.utils.data.Subset(dataset, indices1[:50])
     dataset_test = torch.utils.data.Subset(dataset_test, indices2[-50:])
 
     # define training and validation data loaders
@@ -74,7 +73,7 @@ def main():
         collate_fn=utils.collate_fn)
 
     # get the model using our helper function
-    model = get_model_instance_segmentation(num_classes)
+    model = get_maskrcnn(num_classes)
 
     # move model to the right device
     model.to(device)
@@ -100,5 +99,7 @@ def main():
         evaluate(model, data_loader_test, device=device)
 
     print("That's it!")
+
+
 if __name__ == '__main__':
     main()
