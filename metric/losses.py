@@ -16,3 +16,14 @@ class DiceLoss(nn.Module):
         dice = (2. * intersection.sum(1) + smooth) / (input.sum(1) + target.sum(1) + smooth)
 
         return 1 - dice.sum() / num
+
+def dice_cal(images,targets):
+    dice=0
+    smooth = 1e-5
+    for image,target in images,targets:
+        image=image[1,:,:]
+        image=image.view(1,-1)
+        target=target.view(1,-1)
+        intersection = (image * target)
+        dice += (2. * intersection.sum(1) + smooth) / (image.sum(1) + target.sum(1) + smooth)
+    return dice/len(images)
