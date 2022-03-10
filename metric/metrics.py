@@ -40,4 +40,20 @@ def dice_coef2(output, target):
     return (2. * intersection + smooth) / \
            (output.sum() + target.sum() + smooth)
 
+def dice_coef3(predicts,targets):
+    smooth=1e-5
+    predicts=[predict['masks'] for predict in predicts]
+    targets=[target['masks'] for target in targets]
+    for predict in predicts:
+        predict=torch.cat(predict,dim=0)
+        predict=torch.sum(predict, dim=0)
+
+def dice_coeff(pred, target):
+    smooth = 1e-5
+    num = pred.shape[0]
+    m1 = pred.view(num, -1)  # Flatten
+    m2 = target.view(num, -1)  # Flatten
+    intersection = (m1 * m2).sum()
+
+    return (2. * intersection + smooth) / (m1.sum() + m2.sum() + smooth)
 

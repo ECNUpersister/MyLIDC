@@ -20,7 +20,7 @@ class MyDataset(torch.utils.data.Dataset):
             img = Image.open(self.image_path_list[idx])
             mask = Image.open(self.mask_path_list[idx])
             mask = np.array(mask)
-        img = img.convert("RGB")
+        # img = img.convert("RGB")
         # instances are encoded as different colors
         obj_ids = np.unique(mask)
         # first id is the background, so remove it

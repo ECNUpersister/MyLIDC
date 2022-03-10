@@ -77,7 +77,7 @@ def count_params(model):
 if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
-    img = plt.imread('C:/Users/15802/Desktop/image.png')[:, :, 0]
+    img = plt.imread('C:/Users/15802/Desktop/0587_NI000_slice004.png')[:, :, 0]
     print(img.shape)
     fig, ax = plt.subplots(1, 4)
     ax[0].imshow(img, cmap=plt.cm.gray)
