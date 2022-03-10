@@ -3,17 +3,16 @@ import os
 import sys
 from glob import glob
 
-import torch
 import torchvision
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
-
+from torch.utils.data import Dataset, Subset, DataLoader
 import transforms as T
-import utils
-from practice.dataset import MyDataset
 from metric.metrics import dice_coeff
+from practice.dataset import MyDataset
+from utils import *
 
-batch = 2
+batch_size = 4
 
 
 def get_maskrcnn(num_classes):
@@ -45,8 +44,8 @@ def get_transform(train):
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
-    metric_logger = utils.MetricLogger(delimiter="  ")
-    metric_logger.add_meter("lr", utils.SmoothedValue(window_size=1, fmt="{value:.6f}"))
+    metric_logger = MetricLogger(delimiter="  ")
+    metric_logger.add_meter("lr", SmoothedValue(window_size=1, fmt="{value:.6f}"))
     header = f"Epoch: [{epoch}]"
 
     for images, targets in metric_logger.log_every(data_loader, print_freq, header):
@@ -54,6 +53,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
         loss_dict = model(images, targets)
         losses = sum(loss for loss in loss_dict.values())
+        # TODO:为什么会出现非数loss
         if not math.isfinite(losses.item()):
             print(f"Loss is {losses.item()}, stopping training")
             sys.exit(1)
@@ -65,17 +65,14 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
 
 
-
-
 def evaluate(model, data_loader_test, device):
     model.eval()
-    metric_logger = utils.MetricLogger(delimiter="  ")
+    metric_logger = MetricLogger(delimiter="  ")
     header = "Test:"
     for images, targets in metric_logger.log_every(data_loader_test, 100, header):
         images = list(img.to(device) for img in images)
-        # targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
         predicts = model(images)
-        predict_mask = torch.zeros((batch, 1, 64, 64))
+        predict_mask = torch.zeros((batch_size, 1, 64, 64))
         index = 0
         for predict in predicts:
             masks = predict['masks']
@@ -85,7 +82,7 @@ def evaluate(model, data_loader_test, device):
                 predict_mask[index] = masks[0]
                 index = index + 1
         index = 0
-        gt_masks = torch.zeros((batch, 1, 64, 64))
+        gt_masks = torch.zeros((batch_size, 1, 64, 64))
         for target in targets:
             gt_mask = target['masks'].to(device)
             gt_masks[index] = gt_mask
@@ -94,61 +91,42 @@ def evaluate(model, data_loader_test, device):
         metric_logger.update(dice=dice)
 
 
+def get_dataset(dataset_name):
+    train_image_path_list = glob(os.path.join('{}/train/Image/*'.format(dataset_name), "*.npy"))
+    train_mask_path_list = glob(os.path.join('{}/train/Mask/*'.format(dataset_name), "*.npy"))
+    val_image_path_list = glob(os.path.join('{}/test/Image/*'.format(dataset_name), "*.npy"))
+    val_mask_path_list = glob(os.path.join('{}/test/Mask/*'.format(dataset_name), "*.npy"))
+    return MyDataset(train_image_path_list, train_mask_path_list, get_transform(train=True)), \
+           MyDataset(val_image_path_list, val_mask_path_list, get_transform(train=False))
+
+
 def main():
-    # train on the GPU or on the CPU, if a GPU is not available
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    # our dataset has two classes only - background and person
-    num_classes = 2
-    # use our dataset and defined transformations
-    cur_path = 'G:/MyLIDC/data'
-    dataset_name = 'lidc_shape64'
-    train_image_path_list = glob(os.path.join('{}/dataset/{}/train/Image/*'.format(cur_path, dataset_name), "*.npy"))
-    train_mask_path_list = glob(os.path.join('{}/dataset/{}/train/Mask/*'.format(cur_path, dataset_name), "*.npy"))
-    val_image_path_list = glob(os.path.join('{}/dataset/{}/test/Image/*'.format(cur_path, dataset_name), "*.npy"))
-    val_mask_path_list = glob(os.path.join('{}/dataset/{}/test/Mask/*'.format(cur_path, dataset_name), "*.npy"))
-    dataset = MyDataset(train_image_path_list, train_mask_path_list, get_transform(train=True))
-    dataset_test = MyDataset(val_image_path_list, val_mask_path_list, get_transform(train=False))
+    device = torch.device('cuda')
+    num_classes = 2  # 背景也算一类
+    dataset_name = 'G:/MyLIDC/data/dataset/lidc_shape64'
+    dataset_train, dataset_test = get_dataset(dataset_name)
     # split the dataset in train and test set
-    indices1 = torch.randperm(len(dataset)).tolist()
-    indices2 = torch.randperm(len(dataset_test)).tolist()
-    dataset = torch.utils.data.Subset(dataset, indices1[:50])
-    dataset_test = torch.utils.data.Subset(dataset_test, indices2[-50:])
+    # indices1 = torch.randperm(len(dataset_train)).tolist()
+    # indices2 = torch.randperm(len(dataset_test)).tolist()
+    # dataset_train = Subset(dataset_train, indices1[:50])
+    # dataset_test = Subset(dataset_test, indices2[-50:])
 
-    # define training and validation data loaders
-    data_loader = torch.utils.data.DataLoader(
-        dataset, batch_size=2, shuffle=True, num_workers=4,
-        collate_fn=utils.collate_fn)
+    data_loader_train = DataLoader(dataset_train, batch_size, shuffle=True, num_workers=4, collate_fn=collate_fn)
+    data_loader_test = DataLoader(dataset_test, batch_size, shuffle=False, num_workers=4, collate_fn=collate_fn)
 
-    data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=2, shuffle=False, num_workers=4,
-        collate_fn=utils.collate_fn)
+    model = get_maskrcnn(num_classes).to(device)
 
-    # get the model using our helper function
-    model = get_maskrcnn(num_classes)
-
-    # move model to the right device
-    model.to(device)
-
-    # construct an optimizer
     params = [p for p in model.parameters() if p.requires_grad]
-    # optimizer = torch.optim.Adam(params, lr=0.05, weight_decay=0.0005) # adam有时会出现nan导致蹦年优化
-    optimizer = torch.optim.SGD(params, lr=0.005,
-                                momentum=0.9, weight_decay=0.0005)
-    # and a learning rate scheduler
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                   step_size=3,
-                                                   gamma=0.1)
+    # optimizer = torch.optim.Adam(params, lr=0.05, weight_decay=0.0005) # adam有时会出现nan导致不能优化
+    optimizer = torch.optim.SGD(params, lr=0.005, momentum=0.9, weight_decay=0.0005)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
-    # let's train it for 10 epochs
     num_epochs = 10
 
     for epoch in range(num_epochs):
-        # train for one epoch, printing every 10 iterations
-        train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq=10)
-        # update the learning rate
+        train_one_epoch(model, optimizer, data_loader_train, device, epoch, print_freq=10)
         lr_scheduler.step()
-        # evaluate on the test dataset
-        evaluate(model, data_loader_test, device=device)
+        evaluate(model, data_loader_test, device)
 
     print("That's it!")
 
