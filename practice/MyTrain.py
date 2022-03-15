@@ -1,14 +1,12 @@
-from torch.utils.data import DataLoader
 from engine import *
 
 
 def main():
     device = torch.device('cuda')
     dataset_name = 'G:/MyLIDC/data/dataset/lidc_shape64'
-    dataset_train, dataset_test = get_dataset(dataset_name, sample_ratio=0.1)
-
-    data_loader_train = DataLoader(dataset_train,batch_size=3,shuffle=True,collate_fn=collate_fn)
-    data_loader_test = DataLoader(dataset_test,batch_size=3,shuffle=False,collate_fn=collate_fn)
+    dataset_train, dataset_test = get_dataset(dataset_name, sample_ratio=0.01)
+    data_loader_train = torch.utils.data.DataLoader(dataset_train, batch_size=3, shuffle=True, collate_fn=collate_fn)
+    data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=3, shuffle=False, collate_fn=collate_fn)
 
     model = get_maskrcnn(pretrained=False).to(device)
 

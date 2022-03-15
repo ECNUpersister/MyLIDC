@@ -45,18 +45,7 @@ class MyDataset(torch.utils.data.Dataset):
         labels = torch.ones((1,), dtype=torch.int64)
         masks = torch.as_tensor(masks, dtype=torch.uint8)
 
-        image_id = torch.tensor([idx])
-        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-        # suppose all instances are not crowd
-        iscrowd = torch.zeros((1,), dtype=torch.int64)
-
-        target = {}
-        target["boxes"] = boxes
-        target["labels"] = labels
-        target["masks"] = masks
-        target["image_id"] = image_id
-        target["area"] = area
-        target["iscrowd"] = iscrowd
+        target = {"boxes": boxes, "labels": labels, "masks": masks}
 
         if self.transforms is not None:
             img, target = self.transforms(img, target)
