@@ -1,4 +1,4 @@
-# train.py
+# MyTrain.py
 # !/usr/bin/env	python3
 
 """ train network using pytorch
