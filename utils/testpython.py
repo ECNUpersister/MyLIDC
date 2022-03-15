@@ -3,5 +3,8 @@ from glob import glob
 
 import numpy as np
 import torch
-pred=np.ones(shape=(2,1,64,64))
-print(pred.shape[0])
+predict_mask = torch.ones((2, 1, 4, 4))
+m=predict_mask
+predict_mask[0]=torch.zeros((1,4,4))
+print(predict_mask)
+print(m)

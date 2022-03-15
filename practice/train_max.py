@@ -1,18 +1,15 @@
 import math
 import os
 import sys
-from glob import glob
-
+import transforms as T
 import torchvision
+from glob import glob
+from torch.utils.data import DataLoader, Subset
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.mask_rcnn import MaskRCNNPredictor
-from torch.utils.data import Dataset, Subset, DataLoader
-import transforms as T
 from metric.metrics import dice_coeff
 from practice.dataset import MyDataset
 from utils import *
-
-batch_size = 4
 
 
 def get_maskrcnn(num_classes):
@@ -65,29 +62,20 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
 
 
-def evaluate(model, data_loader_test, device):
+def evaluate(model, data_loader_test, device, shape):
     model.eval()
     metric_logger = MetricLogger(delimiter="  ")
     header = "Test:"
     for images, targets in metric_logger.log_every(data_loader_test, 100, header):
         images = list(img.to(device) for img in images)
         predicts = model(images)
-        predict_mask = torch.zeros((batch_size, 1, 64, 64))
-        index = 0
-        for predict in predicts:
-            masks = predict['masks']
-            if masks.shape[0] != 0:
-                for i in range(1, masks.shape[0]):
-                    masks[0] = masks[0] + masks[i]
-                predict_mask[index] = masks[0]
-                index = index + 1
-        index = 0
-        gt_masks = torch.zeros((batch_size, 1, 64, 64))
-        for target in targets:
-            gt_mask = target['masks'].to(device)
-            gt_masks[index] = gt_mask
-            index = index + 1
-        dice = dice_coeff(predict_mask, gt_masks)
+        cur_batch = len(images)
+        predict_masks = torch.zeros((cur_batch, 1, shape, shape))
+        gt_masks = torch.zeros((cur_batch, 1, shape, shape))
+        for index in range(cur_batch):
+            predict_masks[index] = torch.sum(predicts[index]['masks'], dim=0)
+            gt_masks[index] = targets[index]['masks'].to(device)
+        dice = dice_coeff(predict_masks, gt_masks)
         metric_logger.update(dice=dice)
 
 
@@ -106,13 +94,13 @@ def main():
     dataset_name = 'G:/MyLIDC/data/dataset/lidc_shape64'
     dataset_train, dataset_test = get_dataset(dataset_name)
     # split the dataset in train and test set
-    # indices1 = torch.randperm(len(dataset_train)).tolist()
-    # indices2 = torch.randperm(len(dataset_test)).tolist()
-    # dataset_train = Subset(dataset_train, indices1[:50])
-    # dataset_test = Subset(dataset_test, indices2[-50:])
+    indices1 = torch.randperm(len(dataset_train)).tolist()
+    indices2 = torch.randperm(len(dataset_test)).tolist()
+    dataset_train = Subset(dataset_train, indices1[:50])
+    dataset_test = Subset(dataset_test, indices2[-50:])
 
-    data_loader_train = DataLoader(dataset_train, batch_size, shuffle=True, num_workers=4, collate_fn=collate_fn)
-    data_loader_test = DataLoader(dataset_test, batch_size, shuffle=False, num_workers=4, collate_fn=collate_fn)
+    data_loader_train = DataLoader(dataset_train, 4, shuffle=True, num_workers=4, collate_fn=collate_fn)
+    data_loader_test = DataLoader(dataset_test, 4, shuffle=False, num_workers=4, collate_fn=collate_fn)
 
     model = get_maskrcnn(num_classes).to(device)
 
@@ -126,9 +114,9 @@ def main():
     for epoch in range(num_epochs):
         train_one_epoch(model, optimizer, data_loader_train, device, epoch, print_freq=10)
         lr_scheduler.step()
-        evaluate(model, data_loader_test, device)
+        evaluate(model, data_loader_test, device, shape=64)
 
-    print("That's it!")
+    print("运行完成！")
 
 
 if __name__ == '__main__':
